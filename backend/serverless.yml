@@ -1,4 +1,4 @@
-# TODO: Change the name of the org 
+# DONE: Change the name of the org 
 org: ancentus
 app: serverless-todo-app
 service: serverless-todo-app
@@ -109,6 +109,13 @@ resources:
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+          gatewayresponse.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+        ResponseType: DEFAULT_4XX
+        RestApiId:
+          Ref: ApiGatewayRestApi
     
     # TODO: Create a DynamoDB table with local secondary index and a composite key
     TodosTable:
