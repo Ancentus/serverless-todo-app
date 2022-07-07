@@ -8,3 +8,8 @@ import * as uuid from 'uuid'
 import * as createError from 'http-errors'
 
 // TODO: Implement businessLogic
+const attachmentUtils = new AttachmentUtils()
+export async function createAttachmentPresignedUrl(imageId: string): Promise<string> {
+    const uploadUrl = await attachmentUtils.getPresignedUrl(imageId)
+    return uploadUrl
+}
