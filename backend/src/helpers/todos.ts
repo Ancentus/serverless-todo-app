@@ -10,6 +10,7 @@ import * as createError from 'http-errors'
 // TODO: Implement businessLogic
 const attachmentUtils = new AttachmentUtils()
 const todosAccess = new TodosAccess()
+const bucketName = process.env.ATTACHMENT_S3_BUCKET
 
 export async function createAttachmentPresignedUrl(imageId: string): Promise<string> {
     const uploadUrl = await attachmentUtils.getPresignedUrl(imageId)
@@ -19,3 +20,21 @@ export async function createAttachmentPresignedUrl(imageId: string): Promise<str
 export async function getTodosForUser(userId: string): Promise<TodoItem[]> {
     return todosAccess.getUserTodos(userId)
 }
+
+export async function createTodo(
+    createTodoRequest: CreateTodoRequest,
+    userId: string
+  ): Promise<TodoItem> {
+  
+    const itemId = uuid.v4()
+  
+    return await todosAccess.createTodo({
+      todoId: itemId,
+      userId: userId,
+      name: createTodoRequest.name,
+      dueDate: createTodoRequest.dueDate,
+      createdAt: new Date().toISOString(),
+      done: false,
+      attachmentUrl: `https://${bucketName}.s3.amazonaws.com/${itemId}`
+    })
+  }
