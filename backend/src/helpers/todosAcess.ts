@@ -9,7 +9,7 @@ const XAWS = AWSXRay.captureAWS(AWS)
 
 const logger = createLogger('TodosAccess')
 
-// TODO: Implement the dataLayer logic
+// DONE: Implement the dataLayer logic
 export class TodosAccess {
     constructor(
         private readonly docClient: DocumentClient = createDynamoDBClient(),
@@ -35,12 +35,69 @@ export class TodosAccess {
 
     async createTodo(todo: TodoItem): Promise<TodoItem> {
         await this.docClient.put({
-          TableName: this.todosTable,
-          Item: todo
+            TableName: this.todosTable,
+            Item: todo
         }).promise()
-    
+
         return todo
-      }
+    }
+
+    async updateTodo(todoId: String, todoUpdate: TodoUpdate, userId: String): Promise<void> {
+        logger.info("Updating to with id: " + todoId)
+
+        this.docClient.update(
+            {
+                TableName: this.todosTable,
+                Key: {
+                    todoId,
+                    userId,
+                },
+                UpdateExpression: "set #name = :name, #dueDate = :due, #done = :done",
+                ExpressionAttributeValues: {
+                    ":name": todoUpdate.name,
+                    ":due": todoUpdate.dueDate,
+                    ":done": todoUpdate.done,
+                },
+                ExpressionAttributeNames: {
+                    "#name": "name",
+                    "#dueDate": "dueDate",
+                    "#done": "done",
+                },
+            },
+            function (err, data) {
+                if (err) {
+                    logger.error(err);
+                    throw new Error("Error: " + err);
+                } else {
+                    logger.info('Item updated', {
+                        data: data
+                    })
+                }
+            }
+        );
+    }
+
+    async deleteTodo(todoId: String, userId: String): Promise<void> {
+        this.docClient.delete(
+            {
+                TableName: this.todosTable,
+                Key: {
+                    todoId,
+                    userId,
+                },
+            },
+            function (err, data) {
+                if (err) {
+                    logger.error(err);
+                    throw new Error("Error: " + err);
+                } else {
+                    logger.info('Item deleted', {
+                        data: data
+                    })
+                }
+            }
+        );
+    }
 
 }
 
