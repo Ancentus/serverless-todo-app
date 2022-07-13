@@ -8,7 +8,7 @@ import * as uuid from 'uuid'
 import * as createError from 'http-errors'
 import { TodoUpdate } from '../models/TodoUpdate';
 
-// TODO: Implement businessLogic
+// DONE: Implement businessLogic
 const attachmentUtils = new AttachmentUtils()
 const todosAccess = new TodosAccess()
 const bucketName = process.env.ATTACHMENT_S3_BUCKET
