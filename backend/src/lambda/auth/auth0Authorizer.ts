@@ -1,17 +1,18 @@
 import { CustomAuthorizerEvent, CustomAuthorizerResult } from 'aws-lambda'
 import 'source-map-support/register'
 
-import { verify } from 'jsonwebtoken'
+import { verify, decode } from 'jsonwebtoken'
 import { createLogger } from '../../utils/logger'
-//import Axios from 'axios'
-//import { Jwt } from '../../auth/Jwt'
+import Axios from 'axios'
+import { Jwt } from '../../auth/Jwt'
 import { JwtPayload } from '../../auth/JwtPayload'
+import * as jwkToPem from 'jwk-to-pem'
 
 const logger = createLogger('auth')
 
 //const secret = process.env.AUTH_0_SECRET_FIELD
 
-// TODO: Provide a URL that can be used to download a certificate that can be used
+// DONE: Provide a URL that can be used to download a certificate that can be used
 // to verify JWT token signature.
 // To get this URL you need to go to an Auth0 page -> Show Advanced Settings -> Endpoints -> JSON Web Key Set
 const jwksUrl = 'https://dev-luwcwh2d.us.auth0.com/.well-known/jwks.json'
@@ -58,13 +59,31 @@ export const handler = async (
 
 async function verifyToken(authHeader: string): Promise<JwtPayload> {
   const token = getToken(authHeader)
-  //const jwt: Jwt = decode(token, { complete: true }) as Jwt
+  const jwt: Jwt = decode(token, { complete: true }) as Jwt
 
-  // TODO: Implement token verification
+  // DONE: Implement token verification
   // You should implement it similarly to how it was implemented for the exercise for the lesson 5
   // You can read more about how to do this here: https://auth0.com/blog/navigating-rs256-and-jwks/
 
-  return verify(token, jwksUrl, { algorithms: ['RS256'] }) as JwtPayload
+  const jwks = await Axios.get(jwksUrl);
+
+  if (!jwt) {
+    logger.error("invalid_token")
+    throw new Error("invalid_token");
+  }
+
+  const kid = jwt.header.kid;
+  const signingKey = jwks.data.keys.filter((k) => k.kid === kid)[0];
+
+  if (!signingKey) {
+    logger.error(`Unable to find a signing key that matches '${kid}'`)
+    throw new Error(`Unable to find a signing key that matches '${kid}'`);
+  }
+
+  const cert = jwkToPem(signingKey)
+  logger.info(cert)
+
+  return verify(token, cert, { algorithms: ['RS256'] }) as JwtPayload
 }
 
 function getToken(authHeader: string): string {
