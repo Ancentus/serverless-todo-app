@@ -15,7 +15,7 @@ export const handler = middy(
     const url = await createAttachmentPresignedUrl(todoId)
 
     return {
-      statusCode: 200,
+      statusCode: 201,
       body: JSON.stringify({
         uploadUrl: url
       })
